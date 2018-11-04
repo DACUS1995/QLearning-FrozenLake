@@ -12,4 +12,5 @@ Q-Values aproximation methods:
 --- 
 
 Formula for calculating the Q Value:
+
 ![alt text](Images/Q_value.jpg "Formula")
