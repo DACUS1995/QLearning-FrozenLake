@@ -12,4 +12,4 @@ Q-Values aproximation methods:
 --- 
 
 Formula for calculating the Q Value:
-![alt text](https://github.com/DACUS1995/QLearning-FrozenLake/Images/Q_value.jpg "Formula")
+![alt text](Images/Q_value.jpg "Formula")
