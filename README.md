@@ -14,3 +14,7 @@ Q-Values aproximation methods:
 Formula for calculating the Q Value:
 
 ![alt text](Images/Q_value.jpg "Formula")
+
+---
+
+By running 10000 episodes and using the Q-Table to store the action-space map, the learning method achieved a score of average reward 0.7 per 1000 episodes.
