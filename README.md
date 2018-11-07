@@ -11,7 +11,7 @@ Q-Values aproximation methods:
 
 --- 
 
-Formula for calculating the Q Value:
+Formula for calculating the Q Value (Bellman optimality equation):
 
 ![alt text](Images/Q_value.jpg "Formula")
 
