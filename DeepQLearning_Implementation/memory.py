@@ -1,0 +1,24 @@
+import numpy as np
+import random
+from typing import List, Tuple
+
+class MemoryReplay():
+    def __init__(self, size: int) -> None:
+        self._size = size
+        self._memory = []
+
+    def get_sample(self, batch_size=1) -> List[Tuple]:
+        if len(self._memory) < batch_size:
+            raise Exception("Requested batch size bigger than available samples")
+
+        return random.sample(self._memory, batch_size)
+
+
+    def add_sample(self, sample: Tuple) -> None:
+        if len(self._memory) == self._size:
+            self._memory.pop(0)
+        
+        self._memory.append(sample)
+
+    def __len__(self) -> int:
+        return len(self._memory)
