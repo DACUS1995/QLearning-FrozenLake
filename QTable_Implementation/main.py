@@ -3,24 +3,27 @@ import gym
 import sys
 import random
 import json
+from argparse import ArgumentParser
 
 
 NUMBER_OF_EPISODES = len(sys.argv) > 1 and int(sys.argv[1]) or 10000
 ENVIRONMENT = "FrozenLake-v0"
-SAVE_Q_TABLE = True
 
-max_steps_for_episode = 100
 exploration_rate = 1
 discount_rate = 0.99
 max_exploration_rate = 1
 min_exploration_rate = 0.01
-exploration_decay_rate = 0.001
-learning_rate = 0.1
 
-q_table = np.zeros([16, 4])
-all_rewards = []
 
-def main():
+def main(args):
+	learning_rate = args.learning_rate
+	exploration_decay_rate = args.exploration_decay_rate
+	max_steps_for_episode = args.max_steps_for_episode
+	save = args.save
+	
+	q_table = np.zeros([16, 4])
+	all_rewards = []
+
 	global exploration_rate
 	print("---> Creating the environment ", ENVIRONMENT)
 	env = gym.make(ENVIRONMENT)
@@ -66,7 +69,7 @@ def main():
 		print(count, ": ", str(sum(rewards / 1000)))
 		count += 1000
 
-	if SAVE_Q_TABLE:
+	if save == True:
 		save_table(q_table)
 
 def save_table(q_table):
@@ -77,4 +80,10 @@ def load_table(file_name):
 	raise Exception("Must be implemented")
 
 if __name__ == "__main__":
-	main()
+	parser = ArgumentParser("Qtable")
+	parser.add_argument("--learning-rate", type=float, default=0.1, help="learning rate")
+	parser.add_argument("--exploration-decay-rate", type=float, default=0.001, help="exploration decay rate")
+	parser.add_argument("--max-steps-for-episode", type=float, default=100, help="max steps for episode")
+	parser.add_argument("--save", type=bool, default=True, help="save the generated Qtable")
+	args = parser.parse_args()
+	main(args)
