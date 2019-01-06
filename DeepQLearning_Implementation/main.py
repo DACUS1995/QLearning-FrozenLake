@@ -17,17 +17,25 @@ print(f'[Device selected {device}]')
 def train(
 		learning_rate,
 		num_episodes,
-		memory_size
+		memory_size,
+		max_steps_per_ep
 	):
 	env = gym.make(ENVIRONMENT)
 	replay_memory = MemoryReplay(memory_size)
+
+	target_netowrk = FrozenLakeModel()
+	policy_network = FrozenLakeModel()
+	target_netowrk.to(device)
+	policy_network.to(device)
+
 
 
 def main(args):
 	train(
 		learning_rate=args.learning_rate,
 		num_episodes=args.episodes,
-		memory_size=args.replay_memory_size
+		memory_size=args.replay_memory_size,
+		max_steps_per_ep=args.max_steps_per_ep
 	)
 
 if __name__ == "__main__":
@@ -35,5 +43,6 @@ if __name__ == "__main__":
 	parser.add_argument("-l", "--learning-rate", type=float, default=0.05, help="learning rate")
 	parser.add_argument("-ep", "--episodes", type=int, default=1000, help="number of episodes")
 	parser.add_argument("-mem", "--replay-memory-size", type=int, default=1000, help="replay memory size")
+	parser.add_argument("--max-steps-per-ep", type=int, default=100, help="max steps for episode")
 	args = parser.parse_args()
 	main(args)
