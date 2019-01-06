@@ -37,6 +37,8 @@ def train(
 	target_netowrk.to(device)
 	policy_network.to(device)
 
+	target_netowrk.train()
+
 	optimizer = torch.optim.Adam(policy_network.parameters())
 	criterion = nn.MSELoss()
 	count = 1000
@@ -60,19 +62,28 @@ def train(
 				action = env.action_space.sample()
 
 			new_state, reward, done, _ = env.step(action)
-			reward = torch.tensor(reward, device=device)
-			new_state = torch.tensor(new_state, device=device)
-			action = torch.tensor(action, device=device)
+			rewards += reward
+
+			reward = torch.tensor(reward, device=device, dtype=torch.long)
+			new_state = torch.tensor(new_state, device=device, dtype=torch.long)
+			action = torch.tensor(action, device=device, dtype=torch.long)
 			replay_memory.add_sample((state, action, reward, new_state))
-			rewards += reward 
 
 			# Optimize the model
 			if len(replay_memory) >= batch_size:
 				sample_batch = replay_memory.get_sample(batch_size)
 
 				(states, actions, rewards, new_states) = zip(*sample_batch)
+
+				states = torch.tensor(states, device=device, dtype=torch.float)
+				actions = torch.tensor(actions, device=device, dtype=torch.long)
+				rewards = torch.tensor(rewards, device=device, dtype=torch.long)
+				new_states = torch.tensor(new_states, device=device, dtype=torch.long)
+
+				print(states)
+
 				policy_next_action = policy_network(states).gather(1, actions)
-				target_next_action = policy_network(new_states).detach()
+				target_next_action = target_netowrk(new_states).detach()
 
 				target_expected_next_action = rewards + DISCOUNT * target_next_action.max(1)[0]
 				loss = criterion(policy_next_action, target_expected_next_action)
@@ -95,7 +106,7 @@ def train(
 			rewards = 0
 
 		# Lower the exploration rate
-		exploration_rate = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate * episode)
+		exploration_rate = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate * ep)
 
 def main(args):
 	train(
