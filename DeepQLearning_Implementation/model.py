@@ -7,10 +7,11 @@ ACTION_SPACE_SIZE = 4
 STATE_SPACE_SIZE = 16
 
 class FrozenLakeModel(nn.Module):
-    def __init__(self, state_space_size, action_space_size):
+    def __init__(self, state_space_size=STATE_SPACE_SIZE, action_space_size=ACTION_SPACE_SIZE):
         super().__init__()
-        self.fc1 = nn.Linear(STATE_SPACE_SIZE, 512)
-        self.fc2 = nn.Linear(512, ACTION_SPACE_SIZE)
+        # The state space and the actions space are rather small so only a hidden layer should be enough
+        self.fc1 = nn.Linear(1, 512)
+        self.fc2 = nn.Linear(512, action_space_size)
 
     def forward(self, x):
         out = self.fc1(x)

@@ -43,8 +43,6 @@ def main(args):
 			else:
 				action = env.action_space.sample()
 
-			assert action >= 0 and action < 5, "action is not in available action space"
-
 			new_state, reward, done, info = env.step(action)
 
 			# Update the Q Table
