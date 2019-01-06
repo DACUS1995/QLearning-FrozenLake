@@ -42,14 +42,15 @@ def train(
 	optimizer = torch.optim.Adam(policy_network.parameters())
 	criterion = nn.MSELoss()
 	count = 1000
+	count_2 = 100
 
 	print("---> Started training")
 
 	#Training loop
 	for ep in range(num_episodes):
 		# print(f'---> Running episode [{ep}/{num_episodes}]')
-		state = torch.tensor(env.reset(), device=device)
-		rewards = 0
+		state = torch.tensor([env.reset()], device=device, dtype=torch.float)
+		rewards_ = 0
 
 		for step in range(max_steps_per_ep):
 			random_threshold = random.uniform(0, 1)
@@ -57,30 +58,31 @@ def train(
 			action = None
 			if random_threshold > exploration_rate:
 				with torch.no_grad():
-					action = np.argmax(policy_network(state))
+					action = np.argmax(policy_network(state).numpy())
 			else:
 				action = env.action_space.sample()
 
 			new_state, reward, done, _ = env.step(action)
-			rewards += reward
+			rewards_ += reward
 
-			reward = torch.tensor(reward, device=device, dtype=torch.long)
-			new_state = torch.tensor(new_state, device=device, dtype=torch.long)
-			action = torch.tensor(action, device=device, dtype=torch.long)
+			reward = torch.tensor(reward, device=device)
+			new_state = torch.tensor([new_state], device=device, dtype=torch.float)
+			action = torch.tensor(action, device=device, dtype=torch.float)
 			replay_memory.add_sample((state, action, reward, new_state))
 
 			# Optimize the model
 			if len(replay_memory) >= batch_size:
 				sample_batch = replay_memory.get_sample(batch_size)
-
 				(states, actions, rewards, new_states) = zip(*sample_batch)
 
 				states = torch.tensor(states, device=device, dtype=torch.float)
 				actions = torch.tensor(actions, device=device, dtype=torch.long)
-				rewards = torch.tensor(rewards, device=device, dtype=torch.long)
-				new_states = torch.tensor(new_states, device=device, dtype=torch.long)
+				rewards = torch.tensor(rewards, device=device, dtype=torch.float)
+				new_states = torch.tensor(new_states, device=device, dtype=torch.float)
 
-				print(states)
+				actions = actions.repeat([batch_size, 1])
+				states = states.reshape((-1, 1))
+				new_states = new_states.reshape((-1, 1))
 
 				policy_next_action = policy_network(states).gather(1, actions)
 				target_next_action = target_netowrk(new_states).detach()
@@ -101,8 +103,8 @@ def train(
 			target_netowrk.load_state_dict(policy_network.state_dict())
 
 		# Training metrics
-		if ep % 1000 == 0:
-			print(f'{count} : {rewards / 1000}')
+		if (ep + 1) % 1000 == 0:
+			print(f'{count} : {rewards_ / 1000}')
 			rewards = 0
 
 		# Lower the exploration rate
