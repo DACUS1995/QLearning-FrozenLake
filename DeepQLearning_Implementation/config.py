@@ -1,0 +1,5 @@
+class Config():
+	ACTION_SPACE_SIZE = 4
+	STATE_SPACE_SIZE = 16
+	ENVIRONMENT = "FrozenLake-v0"
+	DISCOUNT = 0.9

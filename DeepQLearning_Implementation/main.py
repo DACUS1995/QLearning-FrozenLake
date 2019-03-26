@@ -9,16 +9,14 @@ import random
 
 from model import FrozenLakeModel
 from memory import MemoryReplay
+from config import Config
 
-ENVIRONMENT = "FrozenLake-v0"
-DISCOUNT = 0.9
 
 max_exploration_rate = 1
-min_exploration_rate = 0.01
-exploration_decay_rate = 0.001
+min_exploration_rate = 0.001
+exploration_decay_rate = 0.0001
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = "cpu"
 print(f'[Device selected {device}]')
 
 def train(
@@ -28,7 +26,7 @@ def train(
 		max_steps_per_ep,
 		batch_size
 	):
-	env = gym.make(ENVIRONMENT)
+	env = gym.make(Config.ENVIRONMENT)
 	exploration_rate = 1
 	replay_memory = MemoryReplay(memory_size)
 
@@ -37,7 +35,7 @@ def train(
 	target_netowrk.to(device)
 	policy_network.to(device)
 
-	target_netowrk.train()
+	policy_network.train()
 
 	optimizer = torch.optim.Adam(policy_network.parameters())
 	criterion = nn.MSELoss()
@@ -58,7 +56,7 @@ def train(
 			action = None
 			if random_threshold > exploration_rate:
 				with torch.no_grad():
-					action = np.argmax(policy_network(state).numpy())
+					action = np.argmax(policy_network(state).cpu().numpy())
 			else:
 				action = env.action_space.sample()
 
@@ -87,7 +85,7 @@ def train(
 				policy_next_action = policy_network(states).gather(1, actions)
 				target_next_action = target_netowrk(new_states).detach()
 
-				target_expected_next_action = rewards + DISCOUNT * target_next_action.max(1)[0]
+				target_expected_next_action = rewards + Config.DISCOUNT * target_next_action.max(1)[0]
 				loss = criterion(policy_next_action, target_expected_next_action)
 
 				optimizer.zero_grad()
