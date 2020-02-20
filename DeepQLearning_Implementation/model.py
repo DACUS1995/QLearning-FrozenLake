@@ -16,4 +16,4 @@ class FrozenLakeModel(nn.Module):
     def forward(self, x):
         out = self.fc1(x)
         out = F.leaky_relu(out)
-        return F.softmax(self.fc2(out))
+        return F.softmax(self.fc2(out), 0)

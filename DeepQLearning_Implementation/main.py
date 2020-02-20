@@ -27,7 +27,7 @@ def train(
 		batch_size
 	):
 	env = gym.make(Config.ENVIRONMENT)
-	exploration_rate = 1
+	exploration_rate = 0.1
 	replay_memory = MemoryReplay(memory_size)
 
 	target_netowrk = FrozenLakeModel()
@@ -41,6 +41,8 @@ def train(
 	criterion = nn.MSELoss()
 	count = 1000
 	count_2 = 100
+
+	running_loss = 0
 
 	print("---> Started training")
 
@@ -60,8 +62,11 @@ def train(
 			else:
 				action = env.action_space.sample()
 
+
 			new_state, reward, done, _ = env.step(action)
 			rewards_ += reward
+			print(action)
+			print(done)
 
 			reward = torch.tensor(reward, device=device)
 			new_state = torch.tensor([new_state], device=device, dtype=torch.float)
@@ -78,15 +83,19 @@ def train(
 				rewards = torch.tensor(rewards, device=device, dtype=torch.float)
 				new_states = torch.tensor(new_states, device=device, dtype=torch.float)
 
-				actions = actions.repeat([batch_size, 1])
+				# actions = actions.repeat([batch_size, 1])
+				actions = actions.unsqueeze(1)
 				states = states.reshape((-1, 1))
 				new_states = new_states.reshape((-1, 1))
 
-				policy_next_action = policy_network(states).gather(1, actions)
+				policy_next_action = policy_network(states).gather(1, actions).squeeze()
 				target_next_action = target_netowrk(new_states).detach()
 
 				target_expected_next_action = rewards + Config.DISCOUNT * target_next_action.max(1)[0]
+
 				loss = criterion(policy_next_action, target_expected_next_action)
+				running_loss += loss.item()
+
 
 				optimizer.zero_grad()
 				loss.backward()
@@ -96,6 +105,9 @@ def train(
 				break
 			state = new_state
 
+		# print(running_loss / max_steps_per_ep)
+		running_loss = 0
+
 		# Update the target network
 		if ep % 10 == 0:
 			target_netowrk.load_state_dict(policy_network.state_dict())
@@ -103,7 +115,7 @@ def train(
 		# Training metrics
 		if (ep + 1) % 1000 == 0:
 			print(f'{count} : {rewards_ / 1000}')
-			rewards = 0
+			rewards_ = 0
 
 		# Lower the exploration rate
 		exploration_rate = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate * ep)
